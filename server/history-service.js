@@ -35,6 +35,8 @@ function addRecord(record) {
     resolution: record.resolution,
     ext: record.ext,
     filesize: record.filesize,
+    filename: record.filename || null,
+    filepath: record.filepath || null,
     downloadedAt: new Date().toISOString(),
   };
   history.unshift(entry);
