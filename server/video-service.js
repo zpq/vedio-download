@@ -52,11 +52,13 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
     ensureDir(downloadDir)
     const outputTemplate = path.join(downloadDir, '%(title)s.%(ext)s')
 
+    // 记录下载前的文件列表，用于下载后匹配新文件
+    const filesBefore = new Set(fs.readdirSync(downloadDir))
+
     const args = [
       '--no-playlist',
       '--newline',
       '--progress',
-      '--print', 'after_move:filepath',
       '-o', outputTemplate,
       '--merge-output-format', 'mp4',
     ]
@@ -75,25 +77,13 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
 
     const proc = spawn('yt-dlp', args)
 
-    let lastFilepath = ''
-    let stdoutBuffer = ''
-
     const progressRe = /\[download\]\s+(\d+\.?\d*)%/
     const totalSizeRe = /\[download\]\s+.*?of\s+([\d.]+\w+)/
     const speedRe = /\s+at\s+([\d.]+\s*\w+\/s)/
 
     proc.stdout.on('data', data => {
-      const text = data.toString()
-      stdoutBuffer += text
-
-      const lines = text.split('\n')
+      const lines = data.toString().split('\n')
       for (const line of lines) {
-        // 捕获 --print 输出的文件路径（包含 downloads 目录且是视频扩展名）
-        if (line.includes(downloadDir) && /\.(mp4|mkv|webm|m4a|mp3)$/i.test(line.trim())) {
-          lastFilepath = line.trim()
-        }
-
-        // 进度解析
         const pctMatch = line.match(progressRe)
         if (pctMatch) {
           const percent = parseFloat(pctMatch[1])
@@ -120,10 +110,17 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
     proc.on('error', reject)
     proc.on('close', code => {
       if (code !== 0) return reject(new Error(`yt-dlp exited with code ${code}`))
+
+      // 通过对比目录找到新下载的文件（避免中文编码问题）
+      const filesAfter = fs.readdirSync(downloadDir)
+      const newFiles = filesAfter.filter(f => !filesBefore.has(f))
+      const videoFile = newFiles.find(f => /\.(mp4|mkv|webm)$/i.test(f)) || newFiles[0] || null
+      const filepath = videoFile ? path.join(downloadDir, videoFile) : null
+
       resolve({
         downloaded: true,
-        filename: lastFilepath ? path.basename(lastFilepath) : null,
-        filepath: lastFilepath || null,
+        filename: videoFile || null,
+        filepath,
       })
     })
   })
