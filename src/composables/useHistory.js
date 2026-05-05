@@ -1,10 +1,13 @@
 import { ref, computed } from 'vue'
 import { fetchHistory, deleteHistoryItem, clearAllHistory } from '../services/api'
 
+const PAGE_SIZE = 20
+
 export function useHistory() {
   const records = ref([])
   const search = ref('')
   const siteFilter = ref('')
+  const page = ref(1)
 
   const sites = computed(() => {
     const set = new Set(records.value.map(r => r.site).filter(Boolean))
@@ -20,6 +23,17 @@ export function useHistory() {
     })
   })
 
+  const totalPages = computed(() => Math.max(1, Math.ceil(filtered.value.length / PAGE_SIZE)))
+
+  const paged = computed(() => {
+    const start = (page.value - 1) * PAGE_SIZE
+    return filtered.value.slice(start, start + PAGE_SIZE)
+  })
+
+  function resetPage() {
+    page.value = 1
+  }
+
   async function load() {
     const res = await fetchHistory()
     if (res.success) records.value = res.data
@@ -27,13 +41,21 @@ export function useHistory() {
 
   async function remove(id) {
     const res = await deleteHistoryItem(id)
-    if (res.success) records.value = res.data
+    if (res.success) {
+      records.value = res.data
+      if (page.value > totalPages.value) page.value = totalPages.value
+    }
   }
 
   async function clear() {
     await clearAllHistory()
     records.value = []
+    page.value = 1
   }
 
-  return { records, search, siteFilter, sites, filtered, load, remove, clear }
+  return {
+    records, search, siteFilter, sites, filtered,
+    page, totalPages, paged, resetPage,
+    load, remove, clear,
+  }
 }
