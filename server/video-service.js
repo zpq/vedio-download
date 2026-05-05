@@ -21,8 +21,11 @@ function runYtDlp(args) {
   })
 }
 
-async function parseVideo(url) {
-  const output = await runYtDlp(['--dump-json', '--no-playlist', '--no-warnings', url])
+async function parseVideo(url, settings) {
+  const args = ['--dump-json', '--no-playlist', '--no-warnings']
+  if (settings.proxy) args.push('--proxy', settings.proxy)
+  args.push(url)
+  const output = await runYtDlp(args)
   const info = JSON.parse(output)
   const formats = (info.formats || [])
     .filter(f => f.vcodec !== 'none' || f.acodec !== 'none')

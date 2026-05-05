@@ -41,7 +41,8 @@ app.post('/api/parse', async (req, res) => {
     return res.status(400).json({ success: false, error: '请输入有效的视频网址' })
   }
   try {
-    const info = await parseVideo(url)
+    const settings = await getSettings()
+    const info = await parseVideo(url, settings)
     res.json({ success: true, data: info })
   } catch (err) {
     res.status(500).json({ success: false, error: err.message })
