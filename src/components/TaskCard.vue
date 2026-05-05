@@ -15,7 +15,8 @@
     <div v-if="task.status === 'ready'" class="task-actions">
       <FormatSelector
         :formats="task.info.formats"
-        v-model="task.selectedFormat"
+        :selected="task.selectedFormat"
+        @update:selected="task.selectedFormat = $event"
       />
       <button class="dl-btn" @click="$emit('download', task)" :disabled="!task.selectedFormat">
         下载

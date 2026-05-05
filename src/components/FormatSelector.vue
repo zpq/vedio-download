@@ -1,18 +1,24 @@
 <template>
-  <select class="format-select" :value="modelValue" @change="$emit('update:modelValue', $event.target.value)">
+  <select class="format-select" @change="handleChange">
     <option disabled value="">选择格式</option>
-    <option v-for="f in formats" :key="f.formatId" :value="f.formatId">
+    <option v-for="f in formats" :key="f.formatId" :value="f.formatId" :selected="selected?.formatId === f.formatId">
       {{ f.resolution }} · {{ f.ext.toUpperCase() }}
     </option>
   </select>
 </template>
 
 <script setup>
-defineProps({
+const props = defineProps({
   formats: { type: Array, required: true },
-  modelValue: { type: String, default: '' },
+  selected: { type: Object, default: null },
 })
-defineEmits(['update:modelValue'])
+const emit = defineEmits(['update:selected'])
+
+function handleChange(e) {
+  const formatId = e.target.value
+  const format = props.formats.find(f => f.formatId === formatId)
+  emit('update:selected', format)
+}
 </script>
 
 <style scoped>
@@ -25,6 +31,7 @@ defineEmits(['update:modelValue'])
   font-size: 13px;
   outline: none;
   cursor: pointer;
+  min-width: 180px;
 }
 .format-select:focus {
   border-color: var(--accent);

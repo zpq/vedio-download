@@ -58,12 +58,14 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
       '--progress',
       '--print', 'after_move:filepath',
       '-o', outputTemplate,
+      '--merge-output-format', 'mp4',
     ]
 
     if (formatId) {
-      args.push('-f', formatId)
+      // 视频格式 + 最佳音频，yt-dlp 自动合并
+      args.push('-f', `${formatId}+bestaudio/best`)
     } else {
-      args.push('-f', 'best')
+      args.push('-f', 'bestvideo+bestaudio/best')
     }
 
     if (settings.proxy) {
