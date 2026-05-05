@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>视频下载工具</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>视频下载工具</h1>
+      <p class="subtitle">支持 B站 / YouTube / 优酷 等多平台视频解析下载</p>
+    </header>
+
+    <div class="input-section">
+      <input
+        type="url"
+        id="urlInput"
+        placeholder="粘贴视频链接..."
+        autocomplete="off"
+      />
+      <button id="parseBtn">解析</button>
+    </div>
+
+    <div id="result" class="result hidden">
+      <div class="video-info">
+        <h2 id="videoTitle"></h2>
+        <span id="videoSite" class="badge"></span>
+        <span id="videoDuration" class="badge"></span>
+      </div>
+
+      <div class="format-list" id="formatList"></div>
+
+      <div class="actions">
+        <button id="downloadBtn" class="primary">下载选中格式</button>
+      </div>
+
+      <div id="progressWrap" class="progress-wrap hidden">
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+        <div class="progress-info">
+          <span id="progressPercent">0%</span>
+          <span id="progressDetail"></span>
+        </div>
+      </div>
+    </div>
+
+    <div id="success" class="success hidden"></div>
+    <div id="error" class="error hidden"></div>
+
+    <section class="history-section">
+      <div class="history-header">
+        <h3>下载记录</h3>
+        <button id="clearHistoryBtn" class="text-btn">清空</button>
+      </div>
+      <div id="historyList" class="history-list">
+        <p class="empty-text">暂无下载记录</p>
+      </div>
+    </section>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
