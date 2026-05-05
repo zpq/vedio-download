@@ -46,7 +46,7 @@ async function parseVideo(url) {
   }
 }
 
-function downloadVideoStream(url, formatId, settings, onProgress) {
+function downloadVideoStream(url, formatId, settings, onProgress, abortSignal) {
   return new Promise((resolve, reject) => {
     const downloadDir = settings.downloadDir || path.join(__dirname, '..', 'downloads')
     ensureDir(downloadDir)
@@ -76,6 +76,11 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
     args.push(url)
 
     const proc = spawn('yt-dlp', args)
+
+    // 客户端断开时终止 yt-dlp 子进程
+    if (abortSignal) {
+      abortSignal.addEventListener('abort', () => proc.kill(), { once: true })
+    }
 
     const progressRe = /\[download\]\s+(\d+\.?\d*)%/
     const totalSizeRe = /\[download\]\s+.*?of\s+([\d.]+\w+)/

@@ -1,62 +1,77 @@
-const fs = require('fs');
-const path = require('path');
+const fs = require('fs')
+const path = require('path')
+const crypto = require('crypto')
 
-const HISTORY_FILE = path.join(__dirname, '..', 'data', 'history.json');
+const HISTORY_FILE = path.join(__dirname, '..', 'data', 'history.json')
+
+let writeLock = Promise.resolve()
 
 function ensureDataDir() {
-  const dir = path.dirname(HISTORY_FILE);
+  const dir = path.dirname(HISTORY_FILE)
   if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
+    fs.mkdirSync(dir, { recursive: true })
   }
 }
 
-function readHistory() {
-  ensureDataDir();
-  if (!fs.existsSync(HISTORY_FILE)) return [];
+async function readHistory() {
+  ensureDataDir()
+  if (!fs.existsSync(HISTORY_FILE)) return []
   try {
-    return JSON.parse(fs.readFileSync(HISTORY_FILE, 'utf-8'));
+    const content = await fs.promises.readFile(HISTORY_FILE, 'utf-8')
+    return JSON.parse(content)
   } catch {
-    return [];
+    return []
   }
 }
 
-function writeHistory(records) {
-  ensureDataDir();
-  fs.writeFileSync(HISTORY_FILE, JSON.stringify(records, null, 2), 'utf-8');
+async function writeHistory(records) {
+  ensureDataDir()
+  await fs.promises.writeFile(HISTORY_FILE, JSON.stringify(records, null, 2), 'utf-8')
 }
 
-function addRecord(record) {
-  const history = readHistory();
-  const entry = {
-    id: Date.now().toString(36),
-    title: record.title,
-    url: record.url,
-    site: record.site,
-    resolution: record.resolution,
-    ext: record.ext,
-    filesize: record.filesize,
-    filename: record.filename || null,
-    filepath: record.filepath || null,
-    downloadedAt: new Date().toISOString(),
-  };
-  history.unshift(entry);
-  writeHistory(history);
-  return entry;
+function withLock(fn) {
+  const prev = writeLock
+  let resolve
+  writeLock = new Promise(r => resolve = r)
+  return fn().finally(() => resolve())
 }
 
-function getHistory() {
-  return readHistory();
+async function addRecord(record) {
+  return withLock(async () => {
+    const history = await readHistory()
+    const entry = {
+      id: crypto.randomBytes(8).toString('hex'),
+      title: record.title,
+      url: record.url,
+      site: record.site,
+      resolution: record.resolution,
+      ext: record.ext,
+      filesize: record.filesize,
+      filename: record.filename || null,
+      filepath: record.filepath || null,
+      downloadedAt: new Date().toISOString(),
+    }
+    history.unshift(entry)
+    await writeHistory(history)
+    return entry
+  })
 }
 
-function deleteRecord(id) {
-  const history = readHistory();
-  const filtered = history.filter(r => r.id !== id);
-  writeHistory(filtered);
-  return filtered;
+async function getHistory() {
+  return readHistory()
 }
 
-function clearHistory() {
-  writeHistory([]);
+async function deleteRecord(id) {
+  return withLock(async () => {
+    const history = await readHistory()
+    const filtered = history.filter(r => r.id !== id)
+    await writeHistory(filtered)
+    return filtered
+  })
 }
 
-module.exports = { addRecord, getHistory, deleteRecord, clearHistory };
+async function clearHistory() {
+  await writeHistory([])
+}
+
+module.exports = { addRecord, getHistory, deleteRecord, clearHistory }

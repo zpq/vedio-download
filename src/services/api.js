@@ -1,12 +1,20 @@
 const BASE = '/api'
 
+async function request(url, options) {
+  const res = await fetch(url, options)
+  const json = await res.json()
+  if (!res.ok) {
+    throw new Error(json.error || `请求失败 (${res.status})`)
+  }
+  return json
+}
+
 export async function parseVideo(url) {
-  const res = await fetch(`${BASE}/parse`, {
+  return request(`${BASE}/parse`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
   })
-  return res.json()
 }
 
 export function buildDownloadUrl(params) {
@@ -15,32 +23,27 @@ export function buildDownloadUrl(params) {
 }
 
 export async function fetchHistory() {
-  const res = await fetch(`${BASE}/history`)
-  return res.json()
+  return request(`${BASE}/history`)
 }
 
 export async function deleteHistoryItem(id) {
-  const res = await fetch(`${BASE}/history/${id}`, { method: 'DELETE' })
-  return res.json()
+  return request(`${BASE}/history/${id}`, { method: 'DELETE' })
 }
 
 export async function clearAllHistory() {
-  const res = await fetch(`${BASE}/history`, { method: 'DELETE' })
-  return res.json()
+  return request(`${BASE}/history`, { method: 'DELETE' })
 }
 
 export async function fetchSettings() {
-  const res = await fetch(`${BASE}/settings`)
-  return res.json()
+  return request(`${BASE}/settings`)
 }
 
 export async function updateSettings(data) {
-  const res = await fetch(`${BASE}/settings`, {
+  return request(`${BASE}/settings`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   })
-  return res.json()
 }
 
 export function previewUrl(id) {
