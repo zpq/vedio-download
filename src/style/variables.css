@@ -1,4 +1,17 @@
 :root {
+  --bg: #f8fafc;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1e293b;
+  --text-dim: #94a3b8;
+  --accent: #3b82f6;
+  --accent-hover: #2563eb;
+  --success: #22c55e;
+  --error: #ef4444;
+  --radius: 10px;
+}
+
+[data-theme="dark"] {
   --bg: #0f0f0f;
   --surface: #1a1a2e;
   --border: #2d2d44;
@@ -8,5 +21,4 @@
   --accent-hover: #5a52d5;
   --success: #4ecdc4;
   --error: #ff6b6b;
-  --radius: 12px;
 }

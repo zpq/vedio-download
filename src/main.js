@@ -5,5 +5,10 @@ import './style/variables.css'
 import './style/global.css'
 
 const app = createApp(App)
-app.use(createPinia())
+const pinia = createPinia()
+app.use(pinia)
 app.mount('#app')
+
+import { useThemeStore } from './stores/theme'
+const theme = useThemeStore()
+theme.init()
