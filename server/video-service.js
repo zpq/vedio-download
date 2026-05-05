@@ -62,7 +62,6 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
     ]
 
     if (formatId) {
-      // 视频格式 + 最佳音频，yt-dlp 自动合并
       args.push('-f', `${formatId}+bestaudio/best`)
     } else {
       args.push('-f', 'bestvideo+bestaudio/best')
@@ -77,29 +76,35 @@ function downloadVideoStream(url, formatId, settings, onProgress) {
     const proc = spawn('yt-dlp', args)
 
     let lastFilepath = ''
+    let stdoutBuffer = ''
 
     const progressRe = /\[download\]\s+(\d+\.?\d*)%/
     const totalSizeRe = /\[download\]\s+.*?of\s+([\d.]+\w+)/
     const speedRe = /\s+at\s+([\d.]+\s*\w+\/s)/
 
     proc.stdout.on('data', data => {
-      const line = data.toString()
-      const fileMatch = line.match(/^\[download\] Destination: (.+)/)
-      if (fileMatch) lastFilepath = fileMatch[1].trim()
+      const text = data.toString()
+      stdoutBuffer += text
 
-      const afterMoveMatch = line.match(/^\[Info\] .*?: "(.+)"$/m)
-      if (afterMoveMatch) lastFilepath = afterMoveMatch[1].trim()
+      const lines = text.split('\n')
+      for (const line of lines) {
+        // 捕获 --print 输出的文件路径（包含 downloads 目录且是视频扩展名）
+        if (line.includes(downloadDir) && /\.(mp4|mkv|webm|m4a|mp3)$/i.test(line.trim())) {
+          lastFilepath = line.trim()
+        }
 
-      const pctMatch = line.match(progressRe)
-      if (pctMatch) {
-        const percent = parseFloat(pctMatch[1])
-        const sizeMatch = line.match(totalSizeRe)
-        const spdMatch = line.match(speedRe)
-        onProgress({
-          percent,
-          totalSize: sizeMatch ? sizeMatch[1] : '',
-          speed: spdMatch ? spdMatch[1] : '',
-        })
+        // 进度解析
+        const pctMatch = line.match(progressRe)
+        if (pctMatch) {
+          const percent = parseFloat(pctMatch[1])
+          const sizeMatch = line.match(totalSizeRe)
+          const spdMatch = line.match(speedRe)
+          onProgress({
+            percent,
+            totalSize: sizeMatch ? sizeMatch[1] : '',
+            speed: spdMatch ? spdMatch[1] : '',
+          })
+        }
       }
     })
 
